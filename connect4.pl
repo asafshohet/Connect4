@@ -3,7 +3,7 @@ empty_board([
 
 get_difficulty(X):-
 	write('please choose difficulty level: normal, hard'),nl,read(Difficulty),
-	(	
+	(
 		Difficulty == normal, !, X is 1;
 		Difficulty == hard, !, X is 2;
 		write('please choose correct difficulty level'),nl,get_difficulty(X)
@@ -14,7 +14,7 @@ get_difficulty(X):-
 column_full([],Len):- !,Len == 0.
 column_full([_|Xs],Len):-
 	NewLen is Len-1, column_full(Xs,NewLen).
-	
+
 column_full(Col):-
 	column_full(Col,6).
 
@@ -22,11 +22,11 @@ board_full([]).
 board_full([Col|Rest]):-
 	column_full(Col), board_full(Rest).
 
-	
+
 valid_move([], _, _).
 valid_move([Col|_], ColNum, ColNum):- !, \+ column_full(Col).
 valid_move([_|Columns], ColNum, CurrColNum):- NextColumn is CurrColNum+1, valid_move(Columns, ColNum, NextColumn).
-	
+
 valid_move(Board, ColNum):-valid_move(Board, ColNum, 1).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -37,18 +37,18 @@ switch_turn(yellow, blue).
 
 %%%%%%%%%%%%%%%update board%%%%%%%%
 
-update_board([],[],_,_).
+update_board([],[],_,_,_).
 
 update_board([Col|Columns], NewBoard, Turn, ColNumToUpdate, ColNumToUpdate):-
-	NextColumn is ColNumToUpdate +1, 
+	NextColumn is ColNumToUpdate +1,
 	update_board(Columns, TempBoard, Turn, ColNumToUpdate, NextColumn),
 	append(Col, [Turn], NewCol), %add the new disk to column
-	append(NewCol,TempBoard, NewBoard).
+	append([NewCol],TempBoard, NewBoard).
 
 update_board([Col|Columns], NewBoard, Turn, ColNumToUpdate, CurrentColoumn):-
-	NextColumn is CurrentColoumn +1, 
+	NextColumn is CurrentColoumn +1,
 	update_board(Columns, TempBoard, Turn, ColNumToUpdate, NextColumn),
-	append(Col,TempBoard, NewBoard).
+	append([Col],TempBoard, NewBoard).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -72,8 +72,8 @@ play(Board, Turn):-
 		valid_move(Board, ColNum), !, update_and_play(Board, Turn, ColNum);
 		write(ColNum), write(' is full... select another one'), play(Board,Turn)
 	).
-	
+
 play:- empty_board(Board),play(Board, blue).
 	%get_difficulty(Difficulty),assert(dif(Difficulty)),
-	
-	
+
+
