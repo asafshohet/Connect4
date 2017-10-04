@@ -31,8 +31,8 @@ valid_move(Board, ColNum):-valid_move(Board, ColNum, 1).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-switch_turn(blue, yellow).
-switch_turn(yellow, blue).
+switch_turn(b, y).
+switch_turn(y, b).
 
 
 %%%%%%%%%%%%%%%update board%%%%%%%%
@@ -54,6 +54,32 @@ update_board([Col|Columns], NewBoard, Turn, ColNumToUpdate, CurrentColoumn):-
 
 goal(_, _):-fail.
 
+%%%%%%%%%%%%%%%%%%%print board%%%%%%%
+
+print_index([], _):- write(' ').
+
+print_index([X|_], 1):- write(X).
+print_index([_|Xs], Index):-
+	NewIndex is Index-1, print_index(Xs,NewIndex).
+
+print_row([],_).
+print_row([Col|Columns], LineNum):-
+	print_index(Col, LineNum),tab(4), print_row(Columns, LineNum).
+
+print_board(_,0).
+print_board(Board,LineNum):-
+	print_row(Board, LineNum),nl,
+	NewLineNum is LineNum-1,
+	print_board(Board, NewLineNum).
+
+print_column_numbers([], _).
+print_column_numbers([_|Columns], Count):-
+	write(Count),tab(4), NewCount is Count+1, print_column_numbers(Columns, NewCount).
+
+print_board(Board):-
+	print_board(Board, 6),
+	print_column_numbers(Board,1),nl.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 update_and_play(Board, Turn, ColNum):-
 	update_board(Board, NewBoard, Turn, ColNum, 1),
@@ -67,13 +93,13 @@ play(Board, _):-
 
 %board isn't full
 play(Board, Turn):-
-	write(Turn), write(': select column (1-7)'),nl,read(ColNum), %TODO - validate coloumn number
+	print_board(Board), write(Turn), write(': select column (1-7)'),nl,read(ColNum), %TODO - validate coloumn number
 	(
 		valid_move(Board, ColNum), !, update_and_play(Board, Turn, ColNum);
-		write(ColNum), write(' is full... select another one'), play(Board,Turn)
+		write('column '), write(ColNum), write(' is full. Please select another one'), nl, play(Board,Turn)
 	).
 
-play:- empty_board(Board),play(Board, blue).
+play:- empty_board(Board),play(Board, b).
 	%get_difficulty(Difficulty),assert(dif(Difficulty)),
 
 
