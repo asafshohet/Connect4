@@ -23,11 +23,12 @@ board_full([Col|Rest]):-
 	column_full(Col), board_full(Rest).
 
 
-valid_move([], _, _).
+valid_move([], _, _):-!,fail.
 valid_move([Col|_], ColNum, ColNum):- !, \+ column_full(Col).
 valid_move([_|Columns], ColNum, CurrColNum):- NextColumn is CurrColNum+1, valid_move(Columns, ColNum, NextColumn).
 
-valid_move(Board, ColNum):-valid_move(Board, ColNum, 1).
+valid_move(Board, ColNum):-
+	integer(ColNum), valid_move(Board, ColNum, 1).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -97,7 +98,7 @@ play(Board, Turn):-
 	print_board(Board), write(Turn), write(': select column (1-7)'),nl,read(ColNum), %TODO - validate coloumn number
 	(
 		valid_move(Board, ColNum), !, update_and_play(Board, Turn, ColNum);
-		write('column '), write(ColNum), write(' is full. Please select another one'), nl, play(Board,Turn)
+		write('column '), write(ColNum), write(' is full or invalid. Please select another one!'), nl, nl, play(Board,Turn)
 	).
 
 play:- empty_board(Board),play(Board, b).
