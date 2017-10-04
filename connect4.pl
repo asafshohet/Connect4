@@ -56,7 +56,7 @@ goal(_, _):-fail.
 
 %%%%%%%%%%%%%%%%%%%print board%%%%%%%
 
-print_index([], _):- write(' ').
+print_index([], _):- write('--').
 
 print_index([X|_], 1):- write(X).
 print_index([_|Xs], Index):-
@@ -77,8 +77,9 @@ print_column_numbers([_|Columns], Count):-
 	write(Count),tab(4), NewCount is Count+1, print_column_numbers(Columns, NewCount).
 
 print_board(Board):-
-	print_board(Board, 6),
-	print_column_numbers(Board,1),nl.
+	print_column_numbers(Board,1),nl,nl,
+	print_board(Board, 6),nl.
+	
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 update_and_play(Board, Turn, ColNum):-
