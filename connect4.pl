@@ -10,7 +10,6 @@ get_difficulty(X):-
 
 %%%%%%%%%% board validations %%%%%%%%%%
 
-
 coloumn_len([],0).
 coloumn_len([_|Xs], Length):-
 	coloumn_len(Xs,NewLength), Length is NewLength+1.
@@ -28,18 +27,10 @@ board_full([]).
 board_full([Col|Columns]):-
 	column_full([Col],1), board_full(Columns).
 
-/*
-valid_move([], _, _):-!,fail.
-valid_move([Col|_], ColNum, ColNum):- !, \+ column_full(Col).
-valid_move([_|Columns], ColNum, CurrColNum):- NextColumn is CurrColNum+1, valid_move(Columns, ColNum, NextColumn).
-*/
 valid_move(Board, ColNum):-
-	integer(ColNum), ColNum =< 7, ColNum>=0, \+ column_full(Board, ColNum).
+	integer(ColNum), ColNum =< 7, ColNum>0, \+ column_full(Board, ColNum).
 
 %%%%%%%%%%%%%%%%%%%%%%% update board %%%%%%%%%%%%
-
-switch_turn(b, y).
-switch_turn(y, b).
 
 update_board([],[],_,_,_).
 
@@ -183,6 +174,10 @@ print_board(Board):-
 	
 
 %%%%%%%%%%%%%% entry point %%%%%%%%%%%%
+
+switch_turn(x, o).
+switch_turn(o, x).
+
 update_and_play(Board, Turn, ColNum):-
 	update_board(Board, NewBoard, Turn, ColNum, 1),
 	(
@@ -201,7 +196,95 @@ play(Board, Turn):-
 		write('column '), write(ColNum), write(' is full or invalid. Please select another one!'), nl, nl, play(Board,Turn)
 	).
 
-play:- init_board(Board),play(Board, b).
+play:- init_board(Board),play(Board, x).
 	%get_difficulty(Difficulty),asserta(dif(Difficulty)),
+
+
+	
+%%%%%%%%%%%%%% alpha-beta %%%%%%%%%%%%
+
+max_to_move(x/_/_).
+min_to_move(o/_/_).
+
+:- dynamic
+	win/2. % win(Turn,Depth)l
+
+
+save_if_win(Turn/ColNum/Board, Depth, DidWeJustWin):-
+	win(Turn,_), !;
+	goal(Board,ColNum,Turn),!, DidWeJustWin is 1, asserta(win(Turn,Depth)),!;
+	true.
+
+delete_if_win(Turn/_/_, DidWeJustWin):-
+	nonvar(DidWeJustWin), !, retractall(win(Turn,_)); 
+	true.
+
+alphabeta(Pos,Alpha,Beta,GoodPos,Val,Depth):-
+	Depth > 0, moves(Pos,PosList),!,
+	boundedbest(PosList,Alpha,Beta,GoodPos,Val,Depth);
+	staticval(Pos,Val).
+
+boundedbest([Pos|PosList],Alpha,Beta,GoodPos,GoodVal,Depth):-
+	NewDepth is Depth - 1,
+	save_if_win(Pos,Depth,DidWeJustWin), %My addition
+	alphabeta(Pos, Alpha,Beta,_, Val,NewDepth),
+	goodenough(PosList,Alpha,Beta,Pos,Val,GoodPos,GoodVal,Depth),
+	delete_if_win(Pos,DidWeJustWin).%My addition
+				
+
+goodenough([],_,_,Pos,Val,Pos,Val,_):- !.     % No other candidate
+
+goodenough(_,Alpha,Beta,Pos,Val,Pos,Val,_):-
+	min_to_move(Pos), Val > Beta,!;       % Maximizer attained upper bound
+	max_to_move(Pos), Val < Alpha,!.      % Minimizer attained lower bound
+
+goodenough(PosList,Alpha,Beta,Pos,Val,GoodPos,GoodVal,Depth):-
+	newbounds(Alpha,Beta,Pos,Val,NewAlpha,NewBeta),        % Refine bounds
+	boundedbest(PosList,NewAlpha,NewBeta,Pos1,Val1,Depth),
+	betterof(Pos,Val,Pos1,Val1,GoodPos,GoodVal).
+
+newbounds(Alpha,Beta,Pos,Val,Val,Beta):-
+	min_to_move(Pos), Val > Alpha,!.        % Maximizer increased lower bound
+
+newbounds(Alpha,Beta,Pos,Val,Alpha,Val):-
+	max_to_move(Pos), Val < Beta,!.         % Minimizer decreased upper bound
+
+newbounds(Alpha,Beta,_,_,Alpha,Beta).          % Otherwise bounds unchanged
+
+betterof(Pos,Val,_,Val1,Pos,Val):-         % Pos better then Pos1
+	min_to_move(Pos), Val > Val1,!;
+	max_to_move(Pos), Val < Val1,!.
+
+betterof(_,_,Pos1,Val1,Pos1,Val1).             % Otherwise Pos1 better
+	
+
+	
+% list of all possible next states. template is Turn/ColNum/NewBoard
+moves(Turn/_/Board, ListOfMoves):-
+	findall(Turn/ColNum/NewBoard, (valid_move(Board, ColNum), update_board(Board, NewBoard, Turn, ColNum, 1)), ListOfMoves).
+
+% heuristic functions %
+amount_strait(Board, ColNum, Index, Turn, Val):-
+	goal(Board, ColNum, Index, Turn, 3), !, Val is 4; 
+	goal(Board, ColNum, Index, Turn, 2), !, Val is 3; 
+	goal(Board, ColNum, Index, Turn, 1), !, Val is 2;
+	Val is 1.
+
+
+staticval(Turn/ColNum/Board, Val):-
+	switch_turn(Turn,OtherPlayer),
+	(
+		% if other player won - give it the most negativie value
+		win(OtherPlayer,WonDepth),!, DepthWeight is 5-WonDepth, Val is -7*DepthWeight;
+		
+		%if we won - give it high value (less than absolute value of 'OtherPlayer' winning
+		win(Turn,WonDepth), !, DepthWeight is 5-WonDepth, Val is 4*DepthWeight;
+		
+		% no one won so far - create static evaluation of new move
+		coloumn_len(Board, ColNum, Index),	amount_strait(Board, ColNum, Index, Turn, Val)
+	).
+
+
+
 
 
