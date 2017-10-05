@@ -179,6 +179,7 @@ switch_turn(x, o).
 switch_turn(o, x).
 
 update_and_play(Board, Turn, ColNum):-
+	
 	update_board(Board, NewBoard, Turn, ColNum, 1),
 	(
 		goal(NewBoard, ColNum, Turn),!, print_board(NewBoard), nl, write(Turn), write(' has prevaled! Game Over!'), nl;
@@ -190,6 +191,7 @@ play(Board, _):-
 
 %board isn't full
 play(Board, Turn):-
+	max_to_move(Turn/_/_), alphabeta(Turn/_/Board,-1000,1000,Turn/ColNum/Board,Val,3):-
 	print_board(Board), write(Turn), write(': select column (1-7)'),nl,read(ColNum), %TODO - validate coloumn number
 	(
 		valid_move(Board, ColNum), !, update_and_play(Board, Turn, ColNum);
@@ -207,7 +209,7 @@ max_to_move(x/_/_).
 min_to_move(o/_/_).
 
 :- dynamic
-	win/2. % win(Turn,Depth)l
+	win/2. % win(Turn,Depth)
 
 
 save_if_win(Turn/ColNum/Board, Depth, DidWeJustWin):-
@@ -261,7 +263,8 @@ betterof(_,_,Pos1,Val1,Pos1,Val1).             % Otherwise Pos1 better
 	
 % list of all possible next states. template is Turn/ColNum/NewBoard
 moves(Turn/_/Board, ListOfMoves):-
-	findall(Turn/ColNum/NewBoard, (valid_move(Board, ColNum), update_board(Board, NewBoard, Turn, ColNum, 1)), ListOfMoves).
+	switch_turn(Turn,NextTurn),
+	findall(NextTurn/ColNum/NewBoard, (valid_move(Board, ColNum), update_board(Board, NewBoard, Turn, ColNum, 1)), ListOfMoves).
 
 % heuristic functions %
 amount_strait(Board, ColNum, Index, Turn, Val):-
@@ -271,8 +274,8 @@ amount_strait(Board, ColNum, Index, Turn, Val):-
 	Val is 1.
 
 
-staticval(Turn/ColNum/Board, Val):-
-	switch_turn(Turn,OtherPlayer),
+staticval(NextTurn/ColNum/Board, Val):-
+	switch_turn(Turn,NextTurn),
 	(
 		% if other player won - give it the most negativie value
 		win(OtherPlayer,WonDepth),!, DepthWeight is 5-WonDepth, Val is -7*DepthWeight;
