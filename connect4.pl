@@ -179,45 +179,49 @@ switch_turn(x, o).
 switch_turn(o, x).
 
 update_and_play(Board, Turn, ColNum):-
-	
 	update_board(Board, NewBoard, Turn, ColNum, 1),
 	(
 		goal(NewBoard, ColNum, Turn),!, print_board(NewBoard), nl, write(Turn), write(' has prevaled! Game Over!'), nl;
-		switch_turn(Turn,NewTurn), play(NewBoard,NewTurn)
+		switch_turn(Turn,NewTurn), print_board(NewBoard), play(NewBoard,NewTurn)
 	).
 
 play(Board, _):-
 	board_full(Board), !, write('Game Over! It is a Tie'), nl.
 
-%board isn't full
-play(Board, Turn):-
-	max_to_move(Turn/_/_), alphabeta(Turn/_/Board,-1000,1000,Turn/ColNum/Board,Val,3):-
-	print_board(Board), write(Turn), write(': select column (1-7)'),nl,read(ColNum), %TODO - validate coloumn number
+%user plays
+play(Board, o):-
+	write(Turn), write(': select column (1-7)'),nl,read(ColNum), 
 	(
 		valid_move(Board, ColNum), !, update_and_play(Board, Turn, ColNum);
 		write('column '), write(ColNum), write(' is full or invalid. Please select another one!'), nl, nl, play(Board,Turn)
 	).
 
-play:- init_board(Board),play(Board, x).
+% computer plays
+play(Board, x):-
+	alphabeta(o-_-Board,-1000,1000,Turn/ColNum/_,_,1), 
+	update_and_play(Board, Turn, ColNum).
+
+play:- init_board(Board),print_board(Board), play(Board, x).
 	%get_difficulty(Difficulty),asserta(dif(Difficulty)),
 
 
 	
 %%%%%%%%%%%%%% alpha-beta %%%%%%%%%%%%
-
-max_to_move(x/_/_).
-min_to_move(o/_/_).
-
+% Pos is Turn-ColNum-NewBoard. Turn is the Turn played. ColNum is the column played. NewBoard is the board created this play
 :- dynamic
 	win/2. % win(Turn,Depth)
 
+%x is computer. the max_to_move is opposite, since Turn is the turn played. not the next turn
+max_to_move(o-_-_).
+min_to_move(x-_-_).
 
-save_if_win(Turn/ColNum/Board, Depth, DidWeJustWin):-
+
+save_if_win(Turn-ColNum-NewBoard, Depth, DidWeJustWin):-
 	win(Turn,_), !;
-	goal(Board,ColNum,Turn),!, DidWeJustWin is 1, asserta(win(Turn,Depth)),!;
+	goal(NewBoard,ColNum,Turn),!, DidWeJustWin is 1, asserta(win(Turn,Depth)),!;
 	true.
 
-delete_if_win(Turn/_/_, DidWeJustWin):-
+delete_if_win(Turn-_-_, DidWeJustWin):-
 	nonvar(DidWeJustWin), !, retractall(win(Turn,_)); 
 	true.
 
@@ -262,9 +266,9 @@ betterof(_,_,Pos1,Val1,Pos1,Val1).             % Otherwise Pos1 better
 
 	
 % list of all possible next states. template is Turn/ColNum/NewBoard
-moves(Turn/_/Board, ListOfMoves):-
-	switch_turn(Turn,NextTurn),
-	findall(NextTurn/ColNum/NewBoard, (valid_move(Board, ColNum), update_board(Board, NewBoard, Turn, ColNum, 1)), ListOfMoves).
+moves(Turn-_-Board, ListOfMoves):-
+	switch_turn(Turn,NextTurn),  %switch the player
+	findall(NextTurn-ColNum-NewBoard, (valid_move(Board, ColNum), update_board(Board, NewBoard, NextTurn, ColNum, 1)), ListOfMoves).
 
 % heuristic functions %
 amount_strait(Board, ColNum, Index, Turn, Val):-
@@ -274,14 +278,14 @@ amount_strait(Board, ColNum, Index, Turn, Val):-
 	Val is 1.
 
 
-staticval(NextTurn/ColNum/Board, Val):-
-	switch_turn(Turn,NextTurn),
+staticval(Turn-ColNum-Board, Val):-
+	switch_turn(Turn,OtherPlayer),
 	(
-		% if other player won - give it the most negativie value
-		win(OtherPlayer,WonDepth),!, DepthWeight is 5-WonDepth, Val is -7*DepthWeight;
+		% if other player won - give it the most negative value
+		win(OtherPlayer,WonDepth),!, Val is -7*WonDepth;
 		
 		%if we won - give it high value (less than absolute value of 'OtherPlayer' winning
-		win(Turn,WonDepth), !, DepthWeight is 5-WonDepth, Val is 4*DepthWeight;
+		win(Turn,WonDepth), !, Val is 4*WonDepth;
 		
 		% no one won so far - create static evaluation of new move
 		coloumn_len(Board, ColNum, Index),	amount_strait(Board, ColNum, Index, Turn, Val)
