@@ -272,8 +272,8 @@ moves(Turn-_-Board, ListOfMoves):-
 
 % heuristic functions %
 amount_strait(Board, ColNum, Index, Turn, Val):-
-	%goal(Board, ColNum, Index, Turn, 3), !, Val is 4;
-	%goal(Board, ColNum, Index, Turn, 2), !, Val is 3;
+	goal(Board, ColNum, Index, Turn, 3), !, Val is 4;
+	goal(Board, ColNum, Index, Turn, 2), !, Val is 3;
 	goal(Board, ColNum, Index, Turn, 1), !, Val is 2;
 	Val is 0.
 
