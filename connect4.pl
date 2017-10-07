@@ -1,13 +1,25 @@
 init_board([[],[],[],[],[],[], []]).
 
-get_difficulty(X):-
+
+:- dynamic 
+	depth/0.
+
+set_depth:-
 	write('please choose difficulty level: normal, hard'),nl,read(Difficulty),
 	(
-		Difficulty == normal, !, X is 1;
-		Difficulty == hard, !, X is 2;
-		write('please choose correct difficulty level'),nl,get_difficulty(X)
+		Difficulty == normal, !, Depth is 4, asserta(depth(Depth));
+		Difficulty == hard, !, Depth is 5, asserta(depth(Depth));
+		write('please choose correct difficulty level'),nl,get_difficulty
 	).
 
+get_first_turn(Turn):-
+	write('do you want to start? (select y or n)'),nl,read(WantToStart),
+	(
+		WantToStart == y, !, Turn = o;
+		WantToStart == n, !, Turn = x;
+		write('please select a valid option...'),nl,get_first_turn(Turn)
+	).
+	
 %%%%%%%%%% board validations %%%%%%%%%%
 
 coloumn_len([],0).
@@ -199,20 +211,14 @@ play(Board, o):-
 	
 % computer plays
 play(Board, x):-
-	alphabeta(o-_-Board,-1000,1000,_-ColNum-_,_,4),
-	write('x selected column '), write(ColNum),nl,nl,	update_and_play(Board, x, ColNum).
-
-get_first_turn(Turn):-
-	write('do you want to start? (select y or n)'),nl,read(WantToStart),
-	(
-		WantToStart == y, !, Turn = o;
-		WantToStart == n, !, Turn = x;
-		write('please select a valid option...'),nl,get_first_turn(Turn)
-	).
+	depth(Depth),
+	alphabeta(o-_-Board,-1000,1000,_-ColNum-_,_,Depth),
+	write('x selected column '), write(ColNum),nl,nl,
+	update_and_play(Board, x, ColNum).
 
 play:- !,init_board(Board), 
-	get_first_turn(Turn), print_board(Board), play(Board, Turn).
-	%get_difficulty(Difficulty),asserta(dif(Difficulty)),
+	get_first_turn(Turn), set_depth,
+	print_board(Board), play(Board, Turn).
 
 
 
