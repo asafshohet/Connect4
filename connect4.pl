@@ -266,12 +266,12 @@ betterof(_,_,Pos1,Val1,Pos1,Val1).             % Otherwise Pos1 better
 
 
 
-% list of all possible next states. template is Turn-ColNum-NewBoard
 prev_move_no_win(_, ColNum, _):-
 	var(ColNum),!.
 prev_move_no_win(Board, ColNum, Turn):-
 	\+ goal(Board, ColNum, Turn).
 
+% list of all possible next states. template is Turn-ColNum-NewBoard
 moves(Turn-ColNum-Board, ListOfMoves):-
 	!,  prev_move_no_win(Board, ColNum, Turn),	% fail if previous play is a win
 	switch_turn(Turn,NextTurn),					% switch the player
@@ -279,11 +279,10 @@ moves(Turn-ColNum-Board, ListOfMoves):-
 	\+ ListOfMoves == [].
 
 
-	
 % heuristic functions %
 amount_strait(Board, ColNum, Index, Turn, Depth, Val):-
-	Depth > 0, goal(Board, ColNum, Index, Turn, 3), !, Val is 5*Depth; % win. more weight to early wins
-	goal(Board, ColNum, Index, Turn, 3), !, Val is 5; 
+	Depth > 0, goal(Board, ColNum, Index, Turn, 3), !, Val is 8*Depth; % win. more weight to early wins
+	goal(Board, ColNum, Index, Turn, 3), !, Val is 8; 
 	goal(Board, ColNum, Index, Turn, 2), !, Val is 3;
 	goal(Board, ColNum, Index, Turn, 1), !, Val is 1;
 	Val is 0.
