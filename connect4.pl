@@ -196,13 +196,23 @@ play(Board, o):-
 		integer(ColNum), !, valid_move(Board, ColNum), update_and_play(Board, o, ColNum);
 		write('column '), write(ColNum), write(' is full or invalid. Please select another one!'), nl, nl, play(Board,o)
 	).
-
+	
 % computer plays
 play(Board, x):-
 	alphabeta(o-_-Board,-1000,1000,_-ColNum-_,_,4),
+	write('x selected column '), write(ColNum),nl,nl,
 	update_and_play(Board, x, ColNum).
 
-play:- init_board(Board),print_board(Board), !, play(Board, x).
+get_first_turn(Turn):-
+	write('do you want to start? (select y or n)'),nl,read(WantToStart),
+	(
+		WantToStart == y, !, Turn = o;
+		WantToStart == n, !, Turn = x;
+		write('please select a valid option. (y or n)'),nl,get_first_turn(Turn)
+	).
+
+play:- !,init_board(Board), 
+	get_first_turn(Turn), print_board(Board), play(Board, Turn).
 	%get_difficulty(Difficulty),asserta(dif(Difficulty)),
 
 
@@ -217,7 +227,7 @@ min_to_move(x-_-_).
 alphabeta(Pos,Alpha,Beta,GoodPos,Val,Depth):-
 	Depth > 0, moves(Pos,PosList),!,
 	boundedbest(PosList,Alpha,Beta,GoodPos,Val,Depth);
-	staticval(Pos,Val).
+	staticval(Pos,Val,Depth).
 
 boundedbest([Pos|PosList],Alpha,Beta,GoodPos,GoodVal,Depth):-
 	NewDepth is Depth - 1,
@@ -257,11 +267,14 @@ moves(Turn-ColNum-Board, ListOfMoves):-
 	findall(NextTurn-NextColNum-NewBoard, (valid_move(Board, NextColNum), update_board(Board, NewBoard, NextTurn, NextColNum, 1)), ListOfMoves), 
 	\+ ListOfMoves == [].
 
+win_val(8).	
+
 % heuristic functions %
-amount_strait(Board, ColNum, Index, Turn, Val):-
-	goal(Board, ColNum, Index, Turn, 3), !, Val is 8;
-	goal(Board, ColNum, Index, Turn, 2), !, Val is 4;
-	goal(Board, ColNum, Index, Turn, 1), !, Val is 2;
+amount_strait(Board, ColNum, Index, Turn, Depth, Val):-
+	Depth > 0, !, win_val(Res), Val is Res*Depth;
+	goal(Board, ColNum, Index, Turn, 3), !, Val is 8; % win. more weight to early wins
+	goal(Board, ColNum, Index, Turn, 2), !, Val is 3;
+	goal(Board, ColNum, Index, Turn, 1), !, Val is 1;
 	Val is 0.
 
 
@@ -269,8 +282,8 @@ val_sign(Turn,Val,NewVal):-
 	min_to_move(Turn-_-_), !, NewVal is Val;
 	NewVal is -2*Val.
 
-staticval(Turn-ColNum-Board, Val):-
-	coloumn_len(Board, ColNum, Index),	amount_strait(Board, ColNum, Index, Turn, Res), val_sign(Turn,Res,Val).
+staticval(Turn-ColNum-Board, Val,Depth):-
+	coloumn_len(Board, ColNum, Index),	amount_strait(Board, ColNum, Index, Turn, Depth, Res), val_sign(Turn,Res,Val).
 
 
 
