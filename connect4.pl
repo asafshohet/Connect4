@@ -199,7 +199,7 @@ play(Board, o):-
 
 % computer plays
 play(Board, x):-
-	alphabeta(o-_-Board,-1000,1000,_-ColNum-_,_,1),
+	alphabeta(o-_-Board,-1000,1000,_-ColNum-_,_,2),
 	update_and_play(Board, x, ColNum).
 
 play:- init_board(Board),print_board(Board), !, play(Board, x).
@@ -265,21 +265,23 @@ betterof(_,_,Pos1,Val1,Pos1,Val1).             % Otherwise Pos1 better
 
 
 
-% list of all possible next states. template is Turn/ColNum/NewBoard
-moves(Turn-_-Board, ListOfMoves):-
-	switch_turn(Turn,NextTurn),  %switch the player
-	findall(NextTurn-ColNum-NewBoard, (valid_move(Board, ColNum), update_board(Board, NewBoard, NextTurn, ColNum, 1)), ListOfMoves).
+% list of all possible next states. template is Turn-ColNum-NewBoard
+moves(Turn-ColNum-Board, ListOfMoves):-
+	!, \+ goal(Board, ColNum, Turn), 	% fail if previous play is a win
+	switch_turn(Turn,NextTurn),			% switch the player
+	findall(NextTurn-NextColNum-NewBoard, (valid_move(Board, NextColNum), update_board(Board, NewBoard, NextTurn, NextColNum, 1)), ListOfMoves), 
+	\+ ListOfMoves == [].
 
 % heuristic functions %
 amount_strait(Board, ColNum, Index, Turn, Val):-
-	goal(Board, ColNum, Index, Turn, 3), !, Val is 4;
-	goal(Board, ColNum, Index, Turn, 2), !, Val is 3;
+	goal(Board, ColNum, Index, Turn, 3), !, Val is 8;
+	goal(Board, ColNum, Index, Turn, 2), !, Val is 4;
 	goal(Board, ColNum, Index, Turn, 1), !, Val is 2;
 	Val is 0.
 
 
 val_sign(Turn,Val,NewVal):-
-	min_to_move(Turn-_-_), !, NewVal is Val;
+	min_to_move(Turn-_-_), !, NewVal is 0;
 	NewVal is -1*Val.
 
 staticval(Turn-ColNum-Board, Val):-
@@ -287,12 +289,6 @@ staticval(Turn-ColNum-Board, Val):-
 	/*
 	switch_turn(Turn,_),
 	(
-		% if other player won - give it the most negative value
-		%win(OtherPlayer,WonDepth),!, Res is -7*WonDepth,val_sign(Turn,Res,Val);
-
-		%if we won - give it high value (less than absolute value of 'OtherPlayer' winning
-		%win(Turn,WonDepth), !, Res is 4*WonDepth, val_sign(Turn,Res,Val);
-
 		% no one won so far - create static evaluation of new move
 
 	).
