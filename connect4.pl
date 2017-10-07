@@ -199,7 +199,7 @@ play(Board, o):-
 	
 % computer plays
 play(Board, x):-
-	alphabeta(o-_-Board,-1000,1000,_-ColNum-_,_,4),
+	alphabeta(o-_-Board,-1000,1000,_-ColNum-_,_,5),
 	write('x selected column '), write(ColNum),nl,nl,
 	update_and_play(Board, x, ColNum).
 
@@ -208,7 +208,7 @@ get_first_turn(Turn):-
 	(
 		WantToStart == y, !, Turn = o;
 		WantToStart == n, !, Turn = x;
-		write('please select a valid option. (y or n)'),nl,get_first_turn(Turn)
+		write('please select a valid option...'),nl,get_first_turn(Turn)
 	).
 
 play:- !,init_board(Board), 
