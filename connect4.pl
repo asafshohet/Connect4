@@ -193,15 +193,14 @@ play(Board, _):-
 play(Board, o):-
 	write('o: select column (1-7)'),nl,read(ColNum),
 	(
-		integer(ColNum), !, valid_move(Board, ColNum), update_and_play(Board, o, ColNum);
+		integer(ColNum), valid_move(Board, ColNum), !, update_and_play(Board, o, ColNum);
 		write('column '), write(ColNum), write(' is full or invalid. Please select another one!'), nl, nl, play(Board,o)
 	).
 	
 % computer plays
 play(Board, x):-
-	alphabeta(o-_-Board,-1000,1000,_-ColNum-_,_,5),
-	write('x selected column '), write(ColNum),nl,nl,
-	update_and_play(Board, x, ColNum).
+	alphabeta(o-_-Board,-1000,1000,_-ColNum-_,_,4),
+	write('x selected column '), write(ColNum),nl,nl,	update_and_play(Board, x, ColNum).
 
 get_first_turn(Turn):-
 	write('do you want to start? (select y or n)'),nl,read(WantToStart),
@@ -260,19 +259,25 @@ betterof(Pos,Val,_,Val1,Pos,Val):-         % Pos better then Pos1
 betterof(_,_,Pos1,Val1,Pos1,Val1).             % Otherwise Pos1 better
 
 
+
 % list of all possible next states. template is Turn-ColNum-NewBoard
+prev_move_no_win(_, ColNum, _):-
+	var(ColNum),!.
+prev_move_no_win(Board, ColNum, Turn):-
+	\+ goal(Board, ColNum, Turn).
+
 moves(Turn-ColNum-Board, ListOfMoves):-
-	!, \+ goal(Board, ColNum, Turn), 	% fail if previous play is a win
-	switch_turn(Turn,NextTurn),			% switch the player
+	!,  prev_move_no_win(Board, ColNum, Turn),	% fail if previous play is a win
+	switch_turn(Turn,NextTurn),					% switch the player
 	findall(NextTurn-NextColNum-NewBoard, (valid_move(Board, NextColNum), update_board(Board, NewBoard, NextTurn, NextColNum, 1)), ListOfMoves), 
 	\+ ListOfMoves == [].
 
-win_val(8).	
 
+	
 % heuristic functions %
 amount_strait(Board, ColNum, Index, Turn, Depth, Val):-
-	Depth > 0, !, win_val(Res), Val is Res*Depth;
-	goal(Board, ColNum, Index, Turn, 3), !, Val is 8; % win. more weight to early wins
+	Depth > 0, goal(Board, ColNum, Index, Turn, 3), !, Val is 5*Depth; % win. more weight to early wins
+	goal(Board, ColNum, Index, Turn, 3), !, Val is 5; 
 	goal(Board, ColNum, Index, Turn, 2), !, Val is 3;
 	goal(Board, ColNum, Index, Turn, 1), !, Val is 1;
 	Val is 0.
