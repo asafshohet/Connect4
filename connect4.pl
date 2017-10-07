@@ -199,7 +199,7 @@ play(Board, o):-
 
 % computer plays
 play(Board, x):-
-	alphabeta(o-_-Board,-1000,1000,_-ColNum-_,_,2),
+	alphabeta(o-_-Board,-1000,1000,_-ColNum-_,_,4),
 	update_and_play(Board, x, ColNum).
 
 play:- init_board(Board),print_board(Board), !, play(Board, x).
@@ -209,30 +209,16 @@ play:- init_board(Board),print_board(Board), !, play(Board, x).
 
 %%%%%%%%%%%%%% alpha-beta %%%%%%%%%%%%
 % Pos is Turn-ColNum-NewBoard. Turn is the Turn played. ColNum is the column played. NewBoard is the board created this play
-:- dynamic
-	win/2. % win(Turn,Depth)
 
 %x is computer. the max_to_move is opposite, since Turn is the turn played. not the next turn
 max_to_move(o-_-_).
 min_to_move(x-_-_).
-
-
-save_if_win(Turn-ColNum-NewBoard, Depth, DidWeJustWin):-
-	win(Turn,_), !;
-	goal(NewBoard,ColNum,Turn),!, DidWeJustWin is 1, asserta(win(Turn,Depth)),!;
-	true.
-
-delete_if_win(Turn-_-_, DidWeJustWin):-
-	nonvar(DidWeJustWin), !, retractall(win(Turn,_));
-	true.
 
 alphabeta(Pos,Alpha,Beta,GoodPos,Val,Depth):-
 	Depth > 0, moves(Pos,PosList),!,
 	boundedbest(PosList,Alpha,Beta,GoodPos,Val,Depth);
 	staticval(Pos,Val).
 
-%save_if_win(Pos,Depth,DidWeJustWin), %My addition
-%delete_if_win(Pos,DidWeJustWin).%My addition
 boundedbest([Pos|PosList],Alpha,Beta,GoodPos,GoodVal,Depth):-
 	NewDepth is Depth - 1,
 	alphabeta(Pos, Alpha,Beta,_, Val,NewDepth),
@@ -264,7 +250,6 @@ betterof(Pos,Val,_,Val1,Pos,Val):-         % Pos better then Pos1
 betterof(_,_,Pos1,Val1,Pos1,Val1).             % Otherwise Pos1 better
 
 
-
 % list of all possible next states. template is Turn-ColNum-NewBoard
 moves(Turn-ColNum-Board, ListOfMoves):-
 	!, \+ goal(Board, ColNum, Turn), 	% fail if previous play is a win
@@ -281,19 +266,11 @@ amount_strait(Board, ColNum, Index, Turn, Val):-
 
 
 val_sign(Turn,Val,NewVal):-
-	min_to_move(Turn-_-_), !, NewVal is 0;
-	NewVal is -1*Val.
+	min_to_move(Turn-_-_), !, NewVal is Val;
+	NewVal is -2*Val.
 
 staticval(Turn-ColNum-Board, Val):-
 	coloumn_len(Board, ColNum, Index),	amount_strait(Board, ColNum, Index, Turn, Res), val_sign(Turn,Res,Val).
-	/*
-	switch_turn(Turn,_),
-	(
-		% no one won so far - create static evaluation of new move
-
-	).
-
-*/
 
 
 
