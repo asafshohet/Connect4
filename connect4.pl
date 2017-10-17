@@ -277,7 +277,7 @@ val_sign(Turn,Val,NewVal):-
 	min_to_move(Turn-_-_), !, NewVal is Val;
 	NewVal is -2*Val.
 
-win_val(8).
+win_val(50).
 three_val(3).
 two_val(1).
 
@@ -308,8 +308,8 @@ staticval(Turn-ColNum-Board, Val,Depth):-
 	(
 	% test victory...
 	depth_factor(Depth,DepthFactor),
-	goal(Board, ColNum), !, win_val(Res), val_sign(Turn,Res,FinalRes), Val is FinalRes* DepthFactor;
-
+	goal(Board, ColNum), !,
+    win_val(Res), val_sign(Turn,Res,FinalRes), Val is FinalRes* DepthFactor;
 	% estimate board
 	board_val(Board, Board, Turn, 1, Val)
 	).
