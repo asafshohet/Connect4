@@ -144,6 +144,9 @@ get_first_turn(Turn):-
 
 %%%%%%%%%% board validations %%%%%%%%%%
 
+between(Min,_,Min).
+between(Min,Max,Out):- M2 is Min+1, M2 =< Max, between(M2,Max,Out).
+
 column_full(Board, ColNum):-
 	col_info(Board, ColNum, Length, _),column_length(MaxLength), Length is MaxLength.
 
