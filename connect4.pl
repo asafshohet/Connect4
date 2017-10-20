@@ -1,3 +1,23 @@
+/*
+Programmer: Asaf Shohet
+ID: 		305164816
+Files Name: connect4.pl
+Description: User vs Computer game of classic 'Connect 4'
+
+Instructions: 
+	winning the game is done by establishing 4 strait disks of your color.
+	it can be in a line, in a row, or diagonaly.
+
+Output:
+	before each move, the program will print the current board status to the user
+
+Synopsys:
+	start the game by inputing 'play'.
+	Follow instructions to choose first player, difficulty level, and board size.
+	do your move by simply selecting the number of the column you wish to insert your disk into.
+	computer is 'x'. you are 'o'.
+	Good luck.
+*/
 
 %%%%%%%%%%%%%% entry point %%%%%%%%%%%%
 
@@ -40,7 +60,7 @@ update_and_play(Board, Turn, ColNum):-
 %%%%%%%%%%%%  init game utils %%%%%%%%%%%%%%%%%%%%%%%
 
 :- dynamic
-	num_columns/1, column_length/1, difficulty/1,valid_columns/1.
+	num_columns/1, valid_columns/1, column_length/1, difficulty/1.
 
 clear:-
 	retractall(num_columns(_)),
