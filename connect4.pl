@@ -8,6 +8,9 @@ Instructions:
 	winning the game is done by establishing 4 strait disks of your color.
 	it can be in a line, in a row, or diagonaly.
 
+Input:
+	during the game, 'exit' will exit the program. 'restart' will restart the game.
+	
 Output:
 	before each move, the program will print the current board status to the user
 
@@ -38,6 +41,10 @@ play(Board, _):-
 play(Board, o):-
 	write('o: select column (1-'),num_columns(NumColumns), write(NumColumns), write(')'), nl,read(ColNum),
 	(
+		% allow exit and restart in the middle of the game...
+		ColNum == exit, !, write('Exiting game...'), nl;
+		ColNum == restart, !, write('Restarting game...'), nl, nl, play;
+		% validate input and play
 		integer(ColNum), valid_move(Board, ColNum), !, update_and_play(Board, o, ColNum);
 		write('column '), write(ColNum), write(' is full or invalid. Please select another one!'), nl, nl, play(Board,o)
 	).
@@ -86,7 +93,7 @@ error_message:-
 	write('please select a valid option...'),nl.
 
 init_message:-
-	write('Hello and Welcome to Connect4!'),nl.
+	nl, write('Hello and Welcome to Connect4!'),nl,nl.
 
 lets_play_message:-
 	write('Let us play!'),nl, nl.
@@ -106,7 +113,7 @@ set_num_columns(NumColumns):-
 	integer(NumColumns), NumColumns =<9, NumColumns>=4, asserta(num_columns(NumColumns)),
 		numlist(1,NumColumns,ValidColumns), asserta(valid_columns(ValidColumns)).
 set_num_columns:-
-	write('please select amount of columns, between 4 and 9:'),nl,read(NumColumns),
+	write('Please select amount of columns, between 4 and 9:'),nl,read(NumColumns),
 	(
 		set_num_columns(NumColumns), !;
 		error_message,set_num_columns
@@ -114,7 +121,7 @@ set_num_columns:-
 
 % improvment - dynamic board size. (allowed between 4-9 columns\rows, because out of this range it doesn't make a lot of sense...)
 set_board_size:-
-	write('would you like to play with default (7X6) board size ? (select y or n)'),nl,read(Default),
+	write('Would you like to play with default (7x6) board size ? (select y or n)'),nl,read(Default),
 	(
 		Default == y, !, set_num_columns(7), set_num_rows(6);
 		Default == n, !, set_num_columns, set_num_rows;
@@ -122,7 +129,7 @@ set_board_size:-
 	).
 
 set_difficuly:-
-	write('please choose difficulty level: (select 1 for normal, 2 for hard)'),nl,read(Difficulty),
+	write('Please choose difficulty level: (select 1 for normal, 2 for hard)'),nl,read(Difficulty),
 	(
 		Difficulty == 1, !, asserta(difficulty(1));
 		Difficulty == 2, !, asserta(difficulty(2));
@@ -130,7 +137,7 @@ set_difficuly:-
 	).
 
 get_first_turn(Turn):-
-	write('would you like to start? (select y or n)'),nl,read(WantToStart),
+	write('Would you like to start? (select y or n)'),nl,read(WantToStart),
 	(
 		WantToStart == y, !, Turn = o;
 		WantToStart == n, !, Turn = x;
