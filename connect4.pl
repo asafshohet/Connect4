@@ -67,14 +67,13 @@ update_and_play(Board, Turn, ColNum):-
 %%%%%%%%%%%%  init game utils %%%%%%%%%%%%%%%%%%%%%%%
 
 :- dynamic
-	num_columns/1, valid_columns/1, column_length/1, difficulty/1.
+	num_columns/1, column_length/1, difficulty/1.
 
 clear:-
 	retractall(num_columns(_)),
 	retractall(column_length(_)),
-	retractall(difficulty(_)),
-	retractall(valid_columns(_)).
-
+	retractall(difficulty(_)).
+	
 % inits the board according to amount of columns
 init_board([], 0).
 init_board([[]|MoreColumns], NumColumns):-
@@ -110,8 +109,7 @@ set_num_rows:-
 
 % ask the user to choose number of columns, and save the response
 set_num_columns(NumColumns):-
-	integer(NumColumns), NumColumns =<9, NumColumns>=4, asserta(num_columns(NumColumns)),
-		numlist(1,NumColumns,ValidColumns), asserta(valid_columns(ValidColumns)).
+	integer(NumColumns), NumColumns =<9, NumColumns>=4, asserta(num_columns(NumColumns)).
 set_num_columns:-
 	write('Please select amount of columns, between 4 and 9:'),nl,read(NumColumns),
 	(
@@ -155,7 +153,7 @@ board_full([Col|Columns]):-
 
 % validates (or generates) a move
 valid_move(Board, ColNum):-
-	valid_columns(ValidColumns), member(ColNum,ValidColumns), \+ column_full(Board, ColNum).
+	num_columns(NumColumns), between(1,NumColumns,ColNum), \+ column_full(Board, ColNum).
 
 %%%%%%%%%%%%%%%%%%%%%%% update board %%%%%%%%%%%%
 
@@ -167,8 +165,8 @@ update_board([Col|Columns], NewBoard, Turn, ColNumToUpdate, ColNumToUpdate):-
 	append(Col, [Turn], NewCol),
 	append([NewCol],TempBoard, NewBoard).
 
-update_board([Col|Columns], NewBoard, Turn, ColNumToUpdate, CurrentColoumn):-
-	!,NextColumn is CurrentColoumn +1,
+update_board([Col|Columns], NewBoard, Turn, ColNumToUpdate, CurrentColumn):-
+	!,NextColumn is CurrentColumn +1,
 	update_board(Columns, TempBoard, Turn, ColNumToUpdate, NextColumn),
 	append([Col],TempBoard, NewBoard).
 
@@ -390,7 +388,7 @@ win_val(WinVal,1):-
 	!, WinVal is 7. % 'normal' difficulty. win for max might be lower than value of a couple of three in a row
 win_val(WinVal,2):-
 	% 'hard' difficulty. win for max must be the highest score possible
-	num_columns(NumColumns), three_val(ThreeVal), WinVal is (ThreeVal*NumColumns)*2.
+	num_columns(NumColumns), three_val(ThreeVal), WinVal is ThreeVal*NumColumns*2.
 
 val_sign(Turn,Val,NewVal):-
 	min_to_move(Turn-_-_), !, NewVal is Val;
