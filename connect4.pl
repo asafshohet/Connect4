@@ -144,6 +144,7 @@ get_first_turn(Turn):-
 
 %%%%%%%%%% board validations %%%%%%%%%%
 
+% sets Out to be value between Min and Max
 between(Min,_,Min).
 between(Min,Max,Out):- M2 is Min+1, M2 =< Max, between(M2,Max,Out).
 
